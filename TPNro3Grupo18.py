@@ -112,6 +112,7 @@ def modificar_formato_columnas_xlsx(nom_archivo):
 
     # Guardar los cambios en el archivo existente
     book.save(nom_archivo)
+
 #####################################################################################################
 from openpyxl.styles import PatternFill
 from openpyxl import load_workbook
@@ -119,37 +120,24 @@ from openpyxl import load_workbook
 def colorear_primer_fila_excel(archivo_excel):
     """
     Función que colorea la primera fila de un archivo Excel
-    
     """
     # Cargar el archivo Excel
     wb = load_workbook(archivo_excel)
-
     # Seleccionar la hoja de trabajo
     ws = wb.active
-
     # Definir el patrón de relleno
     fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
-
     # Obtener la primera fila
     row = ws[1]
-
     # Aplicar el patrón de relleno a cada celda de la primera fila
     for cell in row:
         cell.fill = fill
-
     # Guardar el archivo Excel
     wb.save(archivo_excel)
-
-
-
-
-
 # Finaliza funciones punto 1
 #####################################################################################################
 
-
 # Main 
-
 while True:
     clear_screen()
     print("Trabajo Practico N°3 Crawler y Scraper"+"\n\n")
@@ -160,8 +148,6 @@ while True:
 
     opcion = input("Ingrese una opción: ")
     if opcion == "1":
-
-
         """
         Planifique, diseñe y construya un crawler para recolectar todas las URLs de los primeros 
         2 niveles de profundidad del sitio web:https://www.fi.unju.edu.ar/
@@ -178,8 +164,6 @@ while True:
         lista_de_urls = list(set(lista_de_urls)) # eliminar urls repetidas
         lista_de_urls = sorted(lista_de_urls) # ordenarlas
         i=0
-
-
         print('Enlaces de página principal: \r\n')
         for tag in lista_de_urls:
             i=i+1
@@ -187,90 +171,19 @@ while True:
         print('Tamaño de lista:', len(lista_de_urls))
 
         print('\nEnlaces de 2do NIVEL: \r\n')
-        diccionario_de_urls = obtener_enlaces_secundarios(lista_de_urls)
+        diccionario_de_urls = obtener_enlaces_secundarios(lista_de_urls)#Apartir de aqui se obtiene un diccionario
+        #Que contiene como clave las url y como valores la listas de urls securndarias para cada link
         
-
-
 ###########################################################################
-        """ 
-        import pandas as pd
-        
-        # Definir el diccionario
-        diccionario=diccionario_de_urls
-
-        # Crear un DataFrame a partir del diccionario
-        df = pd.DataFrame.from_dict(diccionario, orient='index')
-
-        # Transponer el DataFrame para que las claves sean filas y los valores sean columnas
-        df = df.transpose()
-
-        # Exportar el DataFrame a un archivo de Excel
-        df.to_excel('archivo.xlsx', index=False)
-
-        """ 
-        # Importamos el diccionario como archivo EXCEL
+        # Exportamos el diccionario como archivo EXCEL
         nombre_archivo="Archivo_Excel_Punto1.xlsx"
         exportar_diccionario_a_excel(diccionario_de_urls,nombre_archivo)
-        
-
-
-
 ##########################################################################3
-        """
-        from openpyxl import load_workbook
-        # Cargar el archivo existente
-        book = load_workbook('archivo.xlsx')
-        # Seleccionar la hoja a modificar
-        sheet = book.active
-        # Modificar el formato de las columnas
-        for col in sheet.columns:
-            max_length = 0
-            column = col[0].column_letter
-            for cell in col:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(cell.value)
-                except:
-                    pass
-            adjusted_width = (max_length + 2) * 1.2
-            sheet.column_dimensions[column].width = adjusted_width
-
-
-        # Guardar los cambios en el archivo existente
-        book.save('archivo.xlsx')
-        """
         #Necesario para dar un formato de visualizacion al archivo excel
         modificar_formato_columnas_xlsx(nombre_archivo)
 ############################################################################
         #Dar color a la primer fila del excel
-
-
-        """
-        from openpyxl.styles import PatternFill
-        from openpyxl import load_workbook
-
-        # Cargar el archivo Excel
-        wb = load_workbook('archivo.xlsx')
-
-        # Seleccionar la hoja de trabajo
-        ws = wb.active
-
-        # Definir el patrón de relleno
-        fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
-
-        # Obtener la primera fila
-        row = ws[1]
-
-        # Aplicar el patrón de relleno a cada celda de la primera fila
-        for cell in row:
-            cell.fill = fill
-
-        # Guardar el archivo Excel
-        wb.save('archivo.xlsx')
-        """
-
         colorear_primer_fila_excel(nombre_archivo)
-
 
         input("Presione enter para continuar...")
         pass
