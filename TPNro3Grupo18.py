@@ -13,7 +13,7 @@ def clear_screen():
 
 import urllib
 from bs4 import BeautifulSoup
-#from urllib import request
+
 
 def obtener_enlaces(url):
     html_pagina = urllib.request.urlopen(url)#devuelve la pagina formato html
@@ -29,7 +29,7 @@ def obtener_enlaces(url):
             if url_html[0:4] == 'http':
                 url_completa=str(tag.get('href'))#cadena de texto
             else :
-                url_completa=(url+str(tag.get('href')))#concatena  la direccion relativa con la direccion original
+                url_completa=(url.rstrip("/")+str(tag.get('href')))#concatena  la direccion relativa con la direccion original
             lista_de_urls.append(url_completa)
         except:
             print('')
@@ -39,17 +39,19 @@ def obtener_enlaces(url):
 import urllib.request
 
 def obtener_enlaces_secundarios(lista_de_urls):
+    i=0
     dic_de_url = {}
     for url in lista_de_urls:
         lista_urls_secundarias = []
-        print(f"Accediendo a los enlaces dentro de la página {url}")
+        i=i+1
+        print(f"Accediendo a los enlaces dentro de la página N° {str(i)}   {url}")
         try:     
             html_pagina = urllib.request.urlopen(url)
             soup = BeautifulSoup(html_pagina, features="html.parser")
             etiquetas_secu = soup("a")  # devuelve todas las urls con etiqueta 'a' que están dentro de la página
             
             if len(etiquetas_secu) > 0: 
-                #print(f"{len(etiquetas_secu)} enlaces que posee el link -----")
+                #print(f"El link de 1er Nivel posee una cantidad de {len(etiquetas_secu)} Links de 2do Nivel\n")
                 for nueva_eti in etiquetas_secu:
                     url_html2 = nueva_eti.get("href")
                     try:
@@ -70,6 +72,77 @@ def obtener_enlaces_secundarios(lista_de_urls):
                 print("Algo ha fallado")  # si la petición al servidor falla, salta al except
             
     return dic_de_url
+#####################################################################################################
+import pandas as pd
+        
+        
+def exportar_diccionario_a_excel(diccionario, nombre_archivo):
+        # Crear un DataFrame a partir del diccionario
+        df = pd.DataFrame.from_dict(diccionario, orient='index')
+
+        # Transponer el DataFrame para que las claves sean filas y los valores sean columnas
+        df = df.transpose()
+
+        # Exportar el DataFrame a un archivo de Excel
+        df.to_excel(nombre_archivo, index=False)
+
+
+#####################################################################################################
+from openpyxl import load_workbook
+
+def modificar_formato_columnas_xlsx(nom_archivo):
+    # Cargar el archivo existente
+    book = load_workbook(nom_archivo)
+
+    # Seleccionar la hoja a modificar
+    sheet = book.active
+
+    # Modificar el formato de las columnas
+    for col in sheet.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except:
+                pass
+        adjusted_width = (max_length + 2) * 1.2
+        sheet.column_dimensions[column].width = adjusted_width
+
+    # Guardar los cambios en el archivo existente
+    book.save(nom_archivo)
+#####################################################################################################
+from openpyxl.styles import PatternFill
+from openpyxl import load_workbook
+
+def colorear_primer_fila_excel(archivo_excel):
+    """
+    Función que colorea la primera fila de un archivo Excel
+    
+    """
+    # Cargar el archivo Excel
+    wb = load_workbook(archivo_excel)
+
+    # Seleccionar la hoja de trabajo
+    ws = wb.active
+
+    # Definir el patrón de relleno
+    fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+
+    # Obtener la primera fila
+    row = ws[1]
+
+    # Aplicar el patrón de relleno a cada celda de la primera fila
+    for cell in row:
+        cell.fill = fill
+
+    # Guardar el archivo Excel
+    wb.save(archivo_excel)
+
+
+
+
 
 # Finaliza funciones punto 1
 #####################################################################################################
@@ -104,18 +177,22 @@ while True:
 
         lista_de_urls = list(set(lista_de_urls)) # eliminar urls repetidas
         lista_de_urls = sorted(lista_de_urls) # ordenarlas
+        i=0
 
 
         print('Enlaces de página principal: \r\n')
         for tag in lista_de_urls:
-            print(tag) 
+            i=i+1
+            print("Pagina N° "+str(i)+" "+tag) 
         print('Tamaño de lista:', len(lista_de_urls))
 
-
+        print('\nEnlaces de 2do NIVEL: \r\n')
         diccionario_de_urls = obtener_enlaces_secundarios(lista_de_urls)
+        
 
 
 ###########################################################################
+        """ 
         import pandas as pd
         
         # Definir el diccionario
@@ -130,7 +207,16 @@ while True:
         # Exportar el DataFrame a un archivo de Excel
         df.to_excel('archivo.xlsx', index=False)
 
+        """ 
+        # Importamos el diccionario como archivo EXCEL
+        nombre_archivo="Archivo_Excel_Punto1.xlsx"
+        exportar_diccionario_a_excel(diccionario_de_urls,nombre_archivo)
+        
+
+
+
 ##########################################################################3
+        """
         from openpyxl import load_workbook
         # Cargar el archivo existente
         book = load_workbook('archivo.xlsx')
@@ -152,9 +238,14 @@ while True:
 
         # Guardar los cambios en el archivo existente
         book.save('archivo.xlsx')
+        """
+        #Necesario para dar un formato de visualizacion al archivo excel
+        modificar_formato_columnas_xlsx(nombre_archivo)
 ############################################################################
         #Dar color a la primer fila del excel
 
+
+        """
         from openpyxl.styles import PatternFill
         from openpyxl import load_workbook
 
@@ -176,6 +267,9 @@ while True:
 
         # Guardar el archivo Excel
         wb.save('archivo.xlsx')
+        """
+
+        colorear_primer_fila_excel(nombre_archivo)
 
 
         input("Presione enter para continuar...")
