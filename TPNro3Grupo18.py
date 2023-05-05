@@ -137,6 +137,35 @@ def colorear_primer_fila_excel(archivo_excel):
 # Finaliza funciones punto 1
 #####################################################################################################
 
+#####################################################################################################
+# Funciones punto 2
+
+import requests
+from bs4 import BeautifulSoup
+def conseguir_url(url):
+            response = requests.get(url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            urls_noticias=[]
+            divs = soup.find_all('div', {'class': 'd23_content-section'}) #Segun la estructura html de la pagina
+            #los links a necesitar se encuentran en la class = d23_content-section
+            for div in divs:
+                links = div.find_all('a')
+                for link in links:
+                    href = link.get('href')
+                    if href and 'autor' not in href and 'infobae' not in href:
+                        if href and 'economia/2023' in href:
+                            #print(href)
+                            urls_noticias.append(href)
+            return urls_noticias
+        
+
+
+
+
+# Finaliza funciones punto 2
+#####################################################################################################
+
+
 # Main 
 while True:
     clear_screen()
@@ -189,10 +218,68 @@ while True:
         pass
 
     elif opcion == "2":
-       
         clear_screen()#Borra pantalla
+
+        """
+        Realice un web scraping de la siguiente URL:
+        https://www.infobae.com/economia/
+        De esta URL recolecte las primeras 10 noticias, identificando por cada una el Título, 
+        Resumen, Listado de imágenes (ubicación del archivo) y el Cuerpo de la misma. 
+        A continuación realice un análisis textual sencillo, tokenize dichos documentos, 
+        elimine las stop-words y liste los 100 términos más frecuentes. 
+        En el mismo sentido realice un stemming y vuelva a listar los 100 términos más frecuentes. 
+        """
+
         
-        
+        url = 'https://www.infobae.com/economia/'
+        lista_de_noticias=conseguir_url(url)
+        lista_de_noticias = list(set(lista_de_noticias))
+        lista_de_noticias.sort()
+
+        """
+        for noticia in lista_de_noticias:
+            print(noticia)
+        """
+
+
+############################################################################
+        import requests
+        from bs4 import BeautifulSoup
+
+        url_base = 'https://www.infobae.com'
+        links = ['/economia/2023/05/04/dolar-el-contado-con-liqui-retrocedio-a-427-pesos-la-cotizacion-mas-baja-desde-el-pico-de-hace-dos-semanas/']
+
+        noticias = []
+        for link in links:
+            url = url_base + link
+            response = requests.get(url)
+            html = response.text
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            # Obtener título de la noticia
+            titulo = soup.find('h1').text.strip()
+
+            #obtener subtitulo de la noticia
+            subtitulo = soup.find('h2').text.strip()
+            
+            # Obtener contenido de la noticia
+            parrafos = [p.text for p in soup.find_all("p")]
+            
+            # Agregar título y contenido a la lista de noticias
+            noticias.append({'titulo': titulo,'subtitulo': subtitulo, 'contenido': parrafos})
+
+        # Imprimir lista de noticias
+        for noticia in noticias:
+            print(noticia['titulo'])
+            print('\n')
+            print(noticia['subtitulo'])
+            print('\n')
+            print(noticia['contenido'])
+            print('\n')
+            print('---')
+#####################################################################
+      
+         
         input("Presione enter para continuar...")
 
         pass
