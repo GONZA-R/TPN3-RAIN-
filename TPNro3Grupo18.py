@@ -157,10 +157,61 @@ def conseguir_url(url):
                             #print(href)
                             urls_noticias.append(href)
             return urls_noticias
+
+
+
+import requests
+from bs4 import BeautifulSoup
+
+def web_scrapping(links):
+    noticias = []
+    for link in links:
+            
+        url = link
+        response = requests.get(url)
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+            
+        # Obtener título de la noticia
+        titulo = soup.find('h1').text.strip()
+
+        #obtener subtitulo de la noticia
+        resumen = soup.find('h2').text.strip()
+            
+        # Obtener contenido de la noticia
+        parrafos = [p.text for p in soup.find_all("p")]
+
+        # Obtener url de imagenes en la pagina
+        img_principales = soup.find('div', {'class': 'd23-body-article'}).find_all('img')
+        url_imagen_principal = [img['src'] for img in img_principales] if img_principales else []
+
         
+        # Diccionario con cada elemento de la pagina a consultar
+        noticias.append({'titulo': titulo,'resumen': resumen, 'contenido': parrafos,'url_imagenes':url_imagen_principal}) 
+    i=0
+        # guardar archivo de texto de las 10 primeras noticias
+    for noticia in noticias:
+        i=i+1
+        nombre_noticia='Noticia N° '+str(i)+'.txt'
+        guardar_noticias(nombre_noticia,noticia)
+        if i>=10:
+            break
+        else:
+            pass
+    return noticias
 
 
-
+def guardar_noticias(nombre_archivo,noticia):
+    with open(nombre_archivo, 'w') as file:
+        file.write('Título: \n' + noticia['titulo'] + '\n\n')
+        file.write('Resumen: \n' + noticia['resumen'] + '\n\n')
+        file.write('Contenido: \n\n')
+        for parrafo in noticia['contenido']:
+            file.write(parrafo + '\n')
+        file.write('\nURLs de las imagenes:\n\n')
+        for url in noticia['url_imagenes']:
+            file.write(url + '\n')
+        file.write('\n')
 
 # Finaliza funciones punto 2
 #####################################################################################################
@@ -230,56 +281,56 @@ while True:
         En el mismo sentido realice un stemming y vuelva a listar los 100 términos más frecuentes. 
         """
 
-        
         url = 'https://www.infobae.com/economia/'
         lista_de_noticias=conseguir_url(url)
         lista_de_noticias = list(set(lista_de_noticias))
         lista_de_noticias.sort()
 
-        """
-        for noticia in lista_de_noticias:
-            print(noticia)
-        """
-
-
-############################################################################
-        import requests
-        from bs4 import BeautifulSoup
-
+        
         url_base = 'https://www.infobae.com'
-        links = ['/economia/2023/05/04/dolar-el-contado-con-liqui-retrocedio-a-427-pesos-la-cotizacion-mas-baja-desde-el-pico-de-hace-dos-semanas/']
+        lista_url_completa=[] #la url completa de las noticias va estar formado por el url base + cada link de
+        #la lista de noticias
 
-        noticias = []
-        for link in links:
-            url = url_base + link
-            response = requests.get(url)
-            html = response.text
-            soup = BeautifulSoup(html, 'html.parser')
-            
-            # Obtener título de la noticia
-            titulo = soup.find('h1').text.strip()
+        print('Accediendo a las siguientes paginas...\n')
+        for noticia in lista_de_noticias:
+            print(url_base+noticia+'\n')
+            lista_url_completa.append(url_base+noticia)
+        print("\nSe genero un archivo de texto...\n")
+        print(lista_url_completa)
+        dic_noticias=web_scrapping(lista_url_completa)#Aqui se llama a la funcion que se encarga de traer los titulos,resumenes
+        #contenido de los parrafos y lista de imagenes para guardar todo en un documento de texto
+        with open('Lista de URLs.txt', 'w') as file:#Va a guardar la lista en un archivo de texto para 
+            #visualizar mejor con que links se va a trabajar
+            file.write('\n'.join(lista_url_completa))
 
-            #obtener subtitulo de la noticia
-            subtitulo = soup.find('h2').text.strip()
-            
-            # Obtener contenido de la noticia
-            parrafos = [p.text for p in soup.find_all("p")]
-            
-            # Agregar título y contenido a la lista de noticias
-            noticias.append({'titulo': titulo,'subtitulo': subtitulo, 'contenido': parrafos})
+        #Apartir de aqui ya esta los txt con las noticias, ahora falta procesarlos para seguir trabajando
+        import nltk
+        from nltk.corpus import stopwords
+        from nltk.tokenize import word_tokenize
+        
+        j=0
+        palabras=[]
+        for i in range(1, 11):
+            # aquí va el código que se ejecutará en cada iteración
+            j=j+1
+            nombre="Noticia N° "+str(j)+".txt"
+            with open(nombre, 'r') as file:
+                texto = file.read()
 
-        # Imprimir lista de noticias
-        for noticia in noticias:
-            print(noticia['titulo'])
-            print('\n')
-            print(noticia['subtitulo'])
-            print('\n')
-            print(noticia['contenido'])
-            print('\n')
-            print('---')
-#####################################################################
-      
-         
+            #aqui tendria que procesar el texto
+            
+            palabras=word_tokenize(texto)
+            print("\nContenido de la noticia "+str(j)+"\n")
+            print(palabras)
+
+
+        
+
+
+        
+############################################################################
+        
+
         input("Presione enter para continuar...")
 
         pass
