@@ -137,6 +137,8 @@ def colorear_primer_fila_excel(archivo_excel):
 # Finaliza funciones punto 1
 #####################################################################################################
 
+
+
 #####################################################################################################
 # Funciones punto 2
 
@@ -157,8 +159,7 @@ def conseguir_url(url):
                             #print(href)
                             urls_noticias.append(href)
             return urls_noticias
-
-
+#####################################################################################################
 
 import requests
 from bs4 import BeautifulSoup
@@ -181,10 +182,13 @@ def web_scrapping(links):
         # Obtener contenido de la noticia
         parrafos = [p.text for p in soup.find_all("p")]
 
-        # Obtener url de imagenes en la pagina
-        img_principales = soup.find('div', {'class': 'd23-body-article'}).find_all('img')
-        url_imagen_principal = [img['src'] for img in img_principales] if img_principales else []
 
+        img_principales = soup.find('div', {'class': 'd23-body-article'})
+        if img_principales:
+            img_principales = img_principales.find_all('img')
+        else:
+            img_principales = None
+        url_imagen_principal = [img['src'] for img in img_principales] if img_principales else []
         
         # Diccionario con cada elemento de la pagina a consultar
         noticias.append({'titulo': titulo,'resumen': resumen, 'contenido': parrafos,'url_imagenes':url_imagen_principal}) 
@@ -200,6 +204,7 @@ def web_scrapping(links):
             pass
     return noticias
 
+#####################################################################################################
 
 def guardar_noticias(nombre_archivo,noticia):
     with open(nombre_archivo, 'w') as file:
@@ -212,7 +217,62 @@ def guardar_noticias(nombre_archivo,noticia):
         for url in noticia['url_imagenes']:
             file.write(url + '\n')
         file.write('\n')
+#######################################################################
 
+import string
+from nltk.corpus import stopwords
+
+def eliminar_puntuaciones(tokens):
+    # Obtener los signos de puntuación
+    signos_puntuacion = set(string.punctuation)
+    
+    # Crear una nueva lista sin signos de puntuación
+    tokens_sin_puntuacion = [token for token in tokens if token not in signos_puntuacion]
+    
+    return tokens_sin_puntuacion
+
+####################################################################
+def eliminar_stopwords(lista_palabras):
+    # Obtenemos las stopwords para español
+    stop_words = set(stopwords.words('spanish'))
+    
+    # Eliminamos las stopwords de la lista de palabras
+    lista_sin_stopwords = [palabra for palabra in lista_palabras if not palabra.lower() in stop_words]
+    
+    return lista_sin_stopwords
+#####################################################################
+import re
+def eliminar_links(texto):
+    # Expresión regular para buscar URLs
+    patron = re.compile(r'https?://\S+')
+    # Remover URLs del texto
+    texto_sin_urls = patron.sub('', texto)
+    return texto_sin_urls
+#####################################################################
+
+from collections import Counter
+def obtener_frecuencias(palabras):
+    # Contar la frecuencia de cada palabra
+    frecuencias = Counter(palabras)
+    # Devolver la lista de términos más frecuentes y sus frecuencias
+    return frecuencias.most_common(100)
+
+######################################################################
+from nltk.stem import SnowballStemmer
+
+def algoritmo_snowball(lista_palabras):
+    stemmer = SnowballStemmer('spanish')
+    stemmed = [stemmer.stem(palabra) for palabra in lista_palabras]
+    return stemmed
+#######################################################################
+def escribir_frecuencias_en_txt(frecuencias, nombre_archivo):
+    with open(nombre_archivo, 'w') as archivo:
+        for lista_frecuencias in frecuencias:
+            linea = '\t'.join([str(palabra) + ':' + str(frecuencia) for palabra, frecuencia in lista_frecuencias]) + '\n'
+            archivo.write(linea)
+            archivo.write('\n\n')
+
+#######################################################################
 # Finaliza funciones punto 2
 #####################################################################################################
 
@@ -258,12 +318,16 @@ while True:
         # Exportamos el diccionario como archivo EXCEL
         nombre_archivo="Archivo_Excel_Punto1.xlsx"
         exportar_diccionario_a_excel(diccionario_de_urls,nombre_archivo)
+
 ##########################################################################3
         #Necesario para dar un formato de visualizacion al archivo excel
         modificar_formato_columnas_xlsx(nombre_archivo)
+
 ############################################################################
         #Dar color a la primer fila del excel
         colorear_primer_fila_excel(nombre_archivo)
+############################################################################
+
 
         input("Presione enter para continuar...")
         pass
@@ -295,13 +359,16 @@ while True:
         for noticia in lista_de_noticias:
             print(url_base+noticia+'\n')
             lista_url_completa.append(url_base+noticia)
-        print("\nSe genero un archivo de texto...\n")
-        print(lista_url_completa)
+        #######################################################################
+
+        #print(lista_url_completa)
         dic_noticias=web_scrapping(lista_url_completa)#Aqui se llama a la funcion que se encarga de traer los titulos,resumenes
         #contenido de los parrafos y lista de imagenes para guardar todo en un documento de texto
         with open('Lista de URLs.txt', 'w') as file:#Va a guardar la lista en un archivo de texto para 
             #visualizar mejor con que links se va a trabajar
             file.write('\n'.join(lista_url_completa))
+        print("\nSe genero un archivo de texto...\n")
+
 
         #Apartir de aqui ya esta los txt con las noticias, ahora falta procesarlos para seguir trabajando
         import nltk
@@ -309,25 +376,53 @@ while True:
         from nltk.tokenize import word_tokenize
         
         j=0
-        palabras=[]
+        palabras_noticias=[]
+        palabras_noticias_stemming=[]
+        lista_palabras_noticias=[]
+        lista_palabras_stemming=[]
+
         for i in range(1, 11):
             # aquí va el código que se ejecutará en cada iteración
             j=j+1
             nombre="Noticia N° "+str(j)+".txt"
             with open(nombre, 'r') as file:
-                texto = file.read()
+                texto = file.read()#abre el archivo y va generando una cadena de texto
+                texto = eliminar_links(texto)#elimino los link que existen en la cadena de texto
+                texto= texto.lower()#convierte toda la cadena de texto en minuscula para poder trabajar bien
+                texto= re.sub(r'\d+\.?\d*', '', texto)#elimina los numeros enteros y en decimales
+                
+                texto = texto.replace('“', '')#elimina comillas dobles que quedaron en el texto
+                texto = texto.replace('”', '')#elimina comillas dobles que quedaron en el texto
+                
 
-            #aqui tendria que procesar el texto
+            #Esta parte empezamos a procesar procesar el texto para trabajarlo
             
-            palabras=word_tokenize(texto)
-            print("\nContenido de la noticia "+str(j)+"\n")
-            print(palabras)
+            palabras_noticias=word_tokenize(texto)
+            palabras_noticias=eliminar_puntuaciones(palabras_noticias)
+            palabras_noticias=eliminar_stopwords(palabras_noticias)
+            palabras_noticias_stemming=palabras_noticias
+            palabras_noticias=obtener_frecuencias(palabras_noticias)
 
+            palabras_noticias_stemming=algoritmo_snowball(palabras_noticias_stemming)
+            palabras_noticias_stemming=obtener_frecuencias(palabras_noticias_stemming)
+
+            
+            lista_palabras_noticias.append(palabras_noticias)
+            lista_palabras_stemming.append(palabras_noticias_stemming)
 
         
+        #continuar aqui
+        print('\nLista de los 100 terminos mas frecuentes de las palabras de cada una de las 10 noticias')
+        for elemento in lista_palabras_noticias:
+            print('\n')
+            print(elemento)
+        escribir_frecuencias_en_txt(lista_palabras_noticias, 'Frecuencias de las palabras.txt')
+        print('\nLista de los 100 terminos mas frecuentes de cada raiz de las palabras de cada una de las 10 noticia')
+        for elemento in lista_palabras_stemming:
+            print('\n')
+            print(elemento)
+        escribir_frecuencias_en_txt(lista_palabras_stemming, 'Frecuencias de las raices.txt')
 
-
-        
 ############################################################################
         
 
@@ -339,6 +434,7 @@ while True:
     elif opcion == "3":
 
         clear_screen()
+        
         
 
         
