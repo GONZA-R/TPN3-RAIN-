@@ -295,12 +295,6 @@ def escribir_frecuencias_en_txt(frecuencias, nombre_archivo):
             archivo.write('\n\n')
 
 #######################################################################
-def escribir_lista_en_txt(lista, nombre_archivo):
-    with open(nombre_archivo, 'w',encoding='utf-8') as archivo:
-        for elemento in lista:
-            archivo.write(str(elemento) + '\n')
-
-
 
 
 # Finaliza funciones punto 2
@@ -309,7 +303,7 @@ def escribir_lista_en_txt(lista, nombre_archivo):
 #####################################################################################################
 # Funciones punto 3
 
-import nltk
+#####################################################################################################
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -392,7 +386,7 @@ def crear_matriz_similitud_excel(titulos,palabras_noticias):
 
     # Guardar el archivo
     libro.save("Matriz_Similitudes_Noticias.xlsx")
-
+#####################################################################################################
 
 # Finaliza funciones punto 3
 #####################################################################################################
@@ -480,18 +474,19 @@ while True:
         lista_url_completa=[] #la url completa de las noticias va estar formado por el url base + cada link de
         #la lista de noticias
 
-        print('Accediendo a las siguientes paginas...\n')
+        print('Accediendo a todas las paginas de https://www.infobae.com ...\n')
         for noticia in lista_de_noticias:
-            print(url_base+noticia+'\n')
             lista_url_completa.append(url_base+noticia)
         #######################################################################
 
-        #print(lista_url_completa)
+        
         dic_noticias=web_scrapping(lista_url_completa)#Aqui se llama a la funcion que se encarga de traer los titulos,resumenes
         #contenido de los parrafos y lista de imagenes para guardar todo en un documento de texto
         with open('Lista de URLs.txt', 'w') as file:#Va a guardar la lista en un archivo de texto para 
             #visualizar mejor con que links se va a trabajar
             file.write('\n'.join(lista_url_completa))
+
+
         print("\nSe genero un archivo de texto...\n")
 
 
@@ -535,8 +530,7 @@ while True:
             
 
             ################################################################################################
-            escribir_lista_en_txt(palabras_noticias, "Token Noticia N° "+str(j)+".txt")
-            palabras_noticias_aux.append(palabras_noticias)###############################sacar si esta mal
+            palabras_noticias_aux.append(palabras_noticias)
             #################################################################################################
 
             palabras_noticias=obtener_frecuencias(palabras_noticias)
@@ -549,28 +543,28 @@ while True:
             lista_palabras_stemming.append(palabras_noticias_stemming)
 
         
-
-
-
-
         #continuar aqui
         print('\nLista de los 100 terminos mas frecuentes de las palabras de cada una de las 10 noticias')
+        i=0
         for elemento in lista_palabras_noticias:
-            print('\n')
+            i=i+1
+            print(f'\nNoticia N° {i}\n')
             print(elemento)
         
         escribir_frecuencias_en_txt(lista_palabras_noticias, 'Frecuencias de las palabras.txt')
+        i=0
         print('\nLista de los 100 terminos mas frecuentes de cada raiz de las palabras de cada una de las 10 noticia')
         for elemento in lista_palabras_stemming:
-            print('\n')
+            i=i+1
+            print(f'\nNoticia N° {i}\n')
             print(elemento)
         escribir_frecuencias_en_txt(lista_palabras_stemming, 'Frecuencias de las raices.txt')
-        #esto despues sacar de los comentarios, solo es para acelerar el proceso de trabajo
+        
 
 ############################################################################
         
 
-        input("Presione enter para continuar...")
+        input("\nPresione enter para continuar...")
         selecciono_opcion_2 = True
 
         pass
