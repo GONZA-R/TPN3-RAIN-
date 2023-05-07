@@ -198,7 +198,7 @@ def web_scrapping(links):
         i=i+1
         nombre_noticia='Noticia N° '+str(i)+'.txt'
         guardar_noticias(nombre_noticia,noticia)
-        if i>=10:
+        if i>=3:#original i>=10 para 10 noticias cambiar despues al original#####################333
             break
         else:
             pass
@@ -225,10 +225,8 @@ from nltk.corpus import stopwords
 def eliminar_puntuaciones(tokens):
     # Obtener los signos de puntuación
     signos_puntuacion = set(string.punctuation)
-    
     # Crear una nueva lista sin signos de puntuación
     tokens_sin_puntuacion = [token for token in tokens if token not in signos_puntuacion]
-    
     return tokens_sin_puntuacion
 
 ####################################################################
@@ -249,6 +247,30 @@ def eliminar_links(texto):
     texto_sin_urls = patron.sub('', texto)
     return texto_sin_urls
 #####################################################################
+import re
+
+def corregir_barras(texto):
+    # Buscar patrones de barra y reemplazarlos con un espacio
+    texto = re.sub(r'/', ' ', texto)
+    
+    return texto
+
+import re
+
+def corregir_guion(texto):
+    # Buscar patrones de guion seguido o precedido por espacios y eliminarlos
+    texto = re.sub(r'\s?-\s?', ' ', texto)
+    
+    # Buscar patrones de guion seguido o precedido por caracteres no alfanuméricos y eliminarlos
+    texto = re.sub(r'(\W+)-\s?|(\s?)-(\W+)', r'\1\2\3', texto)
+    
+    # Buscar patrones de guion al final o al inicio de palabras y eliminarlos
+    texto = re.sub(r'(\b\w+)-\b|\b-(\w+\b)', r'\1\2', texto)
+    
+    return texto
+
+#####################################################################
+
 
 from collections import Counter
 def obtener_frecuencias(palabras):
@@ -273,8 +295,95 @@ def escribir_frecuencias_en_txt(frecuencias, nombre_archivo):
             archivo.write('\n\n')
 
 #######################################################################
+def escribir_lista_en_txt(lista, nombre_archivo):
+    with open(nombre_archivo, 'w') as archivo:
+        for elemento in lista:
+            archivo.write(str(elemento) + '\n')
+
+
+
+
 # Finaliza funciones punto 2
 #####################################################################################################
+
+#####################################################################################################
+# Funciones punto 3
+
+import nltk
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+def compare_news(news1, news2):
+    # Convertir las listas tokenizadas a strings
+    text1 = " ".join(news1)
+    text2 = " ".join(news2)
+
+    # Lemmatización de los tokens
+    lemmatizer = WordNetLemmatizer()
+    tokens1 = word_tokenize(text1)
+    tokens2 = word_tokenize(text2)
+    tokens1 = [lemmatizer.lemmatize(word) for word in tokens1]
+    tokens2 = [lemmatizer.lemmatize(word) for word in tokens2]
+
+    # Verificar que las listas de tokens no estén vacías
+    if not tokens1 or not tokens2:
+        return 0.0
+
+    # Vectorización de los textos utilizando la medida TF-IDF
+    vectorizer = TfidfVectorizer()
+    tfidf1 = vectorizer.fit_transform([text1])
+    tfidf2 = vectorizer.transform([text2])
+
+    # Cálculo de la similitud coseno entre los vectores TF-IDF de los textos
+    sim_cos = cosine_similarity(tfidf1, tfidf2)
+
+    return sim_cos[0][0]
+#####################################################################################################
+
+import openpyxl
+
+def crear_matriz_similitud_excel(titulos,palabras_noticias):
+    # Obtener el número de noticias
+    num_noticias = len(titulos)
+
+
+    # Crear un libro y seleccionar la hoja
+    libro = openpyxl.Workbook()
+    hoja = libro.active
+    hoja.title = "Similitud"
+
+    # Asignar nombres a las filas y columnas
+    for i in range(num_noticias):
+        hoja.cell(row=1, column=i+2, value=f"Noticia {i+1}")
+        hoja.cell(row=i+2, column=1, value=f"Noticia {i+1}")
+
+    # Llenar la diagonal principal con 1
+    for i in range(num_noticias):
+        hoja.cell(row=i+2, column=i+2, value=1)
+
+    # Calcular las similitudes y escribirlas en la matriz
+    for i in range(num_noticias):
+        for j in range(i+1, num_noticias):
+            similitud = compare_news(palabras_noticias[i], palabras_noticias[j])
+            hoja.cell(row=i+2, column=j+2, value=round(similitud, 2))
+            hoja.cell(row=j+2, column=i+2, value=round(similitud, 2))
+
+    # Guardar el archivo
+    libro.save("matriz_similitud.xlsx")
+
+
+
+
+#####################################################################################################
+import os
+import openpyxl
+
+
+
 
 
 # Main 
@@ -333,7 +442,6 @@ while True:
         pass
 
     elif opcion == "2":
-        clear_screen()#Borra pantalla
 
         """
         Realice un web scraping de la siguiente URL:
@@ -344,6 +452,8 @@ while True:
         elimine las stop-words y liste los 100 términos más frecuentes. 
         En el mismo sentido realice un stemming y vuelva a listar los 100 términos más frecuentes. 
         """
+
+        clear_screen()#Borra pantalla
 
         url = 'https://www.infobae.com/economia/'
         lista_de_noticias=conseguir_url(url)
@@ -381,7 +491,9 @@ while True:
         lista_palabras_noticias=[]
         lista_palabras_stemming=[]
 
-        for i in range(1, 11):
+        palabras_noticias_aux=[]
+
+        for i in range(1,4):#original (1,11) para 10 noticias cambiar despues al original
             # aquí va el código que se ejecutará en cada iteración
             j=j+1
             nombre="Noticia N° "+str(j)+".txt"
@@ -390,9 +502,11 @@ while True:
                 texto = eliminar_links(texto)#elimino los link que existen en la cadena de texto
                 texto= texto.lower()#convierte toda la cadena de texto en minuscula para poder trabajar bien
                 texto= re.sub(r'\d+\.?\d*', '', texto)#elimina los numeros enteros y en decimales
-                
+                texto=corregir_guion(texto)
+                texto=corregir_barras(texto)
                 texto = texto.replace('“', '')#elimina comillas dobles que quedaron en el texto
                 texto = texto.replace('”', '')#elimina comillas dobles que quedaron en el texto
+                
                 
 
             #Esta parte empezamos a procesar procesar el texto para trabajarlo
@@ -400,7 +514,16 @@ while True:
             palabras_noticias=word_tokenize(texto)
             palabras_noticias=eliminar_puntuaciones(palabras_noticias)
             palabras_noticias=eliminar_stopwords(palabras_noticias)
+
+
             palabras_noticias_stemming=palabras_noticias
+            
+
+            ################################################################################################
+            escribir_lista_en_txt(palabras_noticias, "Token Noticia N° "+str(j)+".txt")
+            palabras_noticias_aux.append(palabras_noticias)###############################sacar si esta mal
+            #################################################################################################
+
             palabras_noticias=obtener_frecuencias(palabras_noticias)
 
             palabras_noticias_stemming=algoritmo_snowball(palabras_noticias_stemming)
@@ -410,18 +533,20 @@ while True:
             lista_palabras_noticias.append(palabras_noticias)
             lista_palabras_stemming.append(palabras_noticias_stemming)
 
-        
+        """
         #continuar aqui
         print('\nLista de los 100 terminos mas frecuentes de las palabras de cada una de las 10 noticias')
         for elemento in lista_palabras_noticias:
             print('\n')
             print(elemento)
+        
         escribir_frecuencias_en_txt(lista_palabras_noticias, 'Frecuencias de las palabras.txt')
         print('\nLista de los 100 terminos mas frecuentes de cada raiz de las palabras de cada una de las 10 noticia')
         for elemento in lista_palabras_stemming:
             print('\n')
             print(elemento)
         escribir_frecuencias_en_txt(lista_palabras_stemming, 'Frecuencias de las raices.txt')
+        """#esto despues sacar de los comentarios, solo es para acelerar el proceso de trabajo
 
 ############################################################################
         
@@ -433,11 +558,40 @@ while True:
 
     elif opcion == "3":
 
+        """Sería capaz de identificar si alguna de las noticias es muy parecida a otra o 
+        están muy relacionadas por la existencia o co-existencia de términos en común? 
+        """
+    
         clear_screen()
         
+        titulos = range(len(palabras_noticias_aux))
+        crear_matriz_similitud_excel(titulos,palabras_noticias_aux)
+        max_similitud = 0.0
+
+        for i in range(len(titulos)):
+            for j in range(i+1, len(titulos)):
+                similitud = compare_news(palabras_noticias_aux[i], palabras_noticias_aux[j])
+                sim1=similitud
+                max_similitud = max(max_similitud, sim1)
+                print("Similitud coseno: {:.2f} entre la noticia {} con la noticia {} asi tambien entre la noticia {} con la noticia {}".format(sim1, i+1, j+1, j+1, i+1))
+            
+
+        print("\nLa mayor similitud es {:.2f}".format(max_similitud))
+        print("\nSe genero un archivo excel para estudiar mejor los resultados...")
         
 
+
+    
+    ###################################################################################################
         
+    ###################################################################################################
+
+
+
+####################################################################################3
+        
+
+
         input("Presione enter para continuar...")
 
         pass
