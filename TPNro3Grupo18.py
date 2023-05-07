@@ -198,7 +198,7 @@ def web_scrapping(links):
         i=i+1
         nombre_noticia='Noticia N° '+str(i)+'.txt'
         guardar_noticias(nombre_noticia,noticia)
-        if i>=3:#original i>=10 para 10 noticias cambiar despues al original#####################333
+        if i>=10:
             break
         else:
             pass
@@ -207,7 +207,7 @@ def web_scrapping(links):
 #####################################################################################################
 
 def guardar_noticias(nombre_archivo,noticia):
-    with open(nombre_archivo, 'w') as file:
+    with open(nombre_archivo, 'w',encoding='utf-8') as file:
         file.write('Título: \n' + noticia['titulo'] + '\n\n')
         file.write('Resumen: \n' + noticia['resumen'] + '\n\n')
         file.write('Contenido: \n\n')
@@ -288,7 +288,7 @@ def algoritmo_snowball(lista_palabras):
     return stemmed
 #######################################################################
 def escribir_frecuencias_en_txt(frecuencias, nombre_archivo):
-    with open(nombre_archivo, 'w') as archivo:
+    with open(nombre_archivo, 'w',encoding='utf-8') as archivo:
         for lista_frecuencias in frecuencias:
             linea = '\t'.join([str(palabra) + ':' + str(frecuencia) for palabra, frecuencia in lista_frecuencias]) + '\n'
             archivo.write(linea)
@@ -296,7 +296,7 @@ def escribir_frecuencias_en_txt(frecuencias, nombre_archivo):
 
 #######################################################################
 def escribir_lista_en_txt(lista, nombre_archivo):
-    with open(nombre_archivo, 'w') as archivo:
+    with open(nombre_archivo, 'w',encoding='utf-8') as archivo:
         for elemento in lista:
             archivo.write(str(elemento) + '\n')
 
@@ -361,9 +361,20 @@ def crear_matriz_similitud_excel(titulos,palabras_noticias):
         hoja.cell(row=1, column=i+2, value=f"Noticia {i+1}")
         hoja.cell(row=i+2, column=1, value=f"Noticia {i+1}")
 
+    # Agregar color a las celdas de los títulos de noticias #ELiminar si esta mal
+        hoja.cell(row=1, column=i+2).fill = openpyxl.styles.PatternFill(start_color='ADD8E6', end_color='ADD8E6', fill_type='solid')
+        hoja.cell(row=i+2, column=1).fill = openpyxl.styles.PatternFill(start_color='ADD8E6', end_color='ADD8E6', fill_type='solid')
+
+
     # Llenar la diagonal principal con 1
     for i in range(num_noticias):
         hoja.cell(row=i+2, column=i+2, value=1)
+
+
+    # Agregar estas variables antes del bucle de cálculo de similitudes
+    max_row = 0
+    max_col = 0
+    max_value = 0
 
     # Calcular las similitudes y escribirlas en la matriz
     for i in range(num_noticias):
@@ -371,22 +382,26 @@ def crear_matriz_similitud_excel(titulos,palabras_noticias):
             similitud = compare_news(palabras_noticias[i], palabras_noticias[j])
             hoja.cell(row=i+2, column=j+2, value=round(similitud, 2))
             hoja.cell(row=j+2, column=i+2, value=round(similitud, 2))
+            # Verificar si la similitud actual es mayor a la máxima encontrada
+            if similitud > max_value:
+                max_value = similitud
+                max_row = i+2
+                max_col = j+2
+    # Pintar la celda con el valor máximo encontrado
+    hoja.cell(row=max_row, column=max_col).fill = openpyxl.styles.PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
 
     # Guardar el archivo
-    libro.save("matriz_similitud.xlsx")
+    libro.save("Matriz_Similitudes_Noticias.xlsx")
 
 
-
-
+# Finaliza funciones punto 3
 #####################################################################################################
-import os
-import openpyxl
 
 
 
+# Main
+selecciono_opcion_2 = False
 
-
-# Main 
 while True:
     clear_screen()
     print("Trabajo Practico N°3 Crawler y Scraper"+"\n\n")
@@ -493,11 +508,11 @@ while True:
 
         palabras_noticias_aux=[]
 
-        for i in range(1,4):#original (1,11) para 10 noticias cambiar despues al original
+        for i in range(1,11):
             # aquí va el código que se ejecutará en cada iteración
             j=j+1
             nombre="Noticia N° "+str(j)+".txt"
-            with open(nombre, 'r') as file:
+            with open(nombre, 'r',encoding='utf-8') as file:
                 texto = file.read()#abre el archivo y va generando una cadena de texto
                 texto = eliminar_links(texto)#elimino los link que existen en la cadena de texto
                 texto= texto.lower()#convierte toda la cadena de texto en minuscula para poder trabajar bien
@@ -533,7 +548,11 @@ while True:
             lista_palabras_noticias.append(palabras_noticias)
             lista_palabras_stemming.append(palabras_noticias_stemming)
 
-        """
+        
+
+
+
+
         #continuar aqui
         print('\nLista de los 100 terminos mas frecuentes de las palabras de cada una de las 10 noticias')
         for elemento in lista_palabras_noticias:
@@ -546,12 +565,13 @@ while True:
             print('\n')
             print(elemento)
         escribir_frecuencias_en_txt(lista_palabras_stemming, 'Frecuencias de las raices.txt')
-        """#esto despues sacar de los comentarios, solo es para acelerar el proceso de trabajo
+        #esto despues sacar de los comentarios, solo es para acelerar el proceso de trabajo
 
 ############################################################################
         
 
         input("Presione enter para continuar...")
+        selecciono_opcion_2 = True
 
         pass
 
@@ -561,30 +581,27 @@ while True:
         """Sería capaz de identificar si alguna de las noticias es muy parecida a otra o 
         están muy relacionadas por la existencia o co-existencia de términos en común? 
         """
+        if selecciono_opcion_2:
     
-        clear_screen()
-        
-        titulos = range(len(palabras_noticias_aux))
-        crear_matriz_similitud_excel(titulos,palabras_noticias_aux)
-        max_similitud = 0.0
-
-        for i in range(len(titulos)):
-            for j in range(i+1, len(titulos)):
-                similitud = compare_news(palabras_noticias_aux[i], palabras_noticias_aux[j])
-                sim1=similitud
-                max_similitud = max(max_similitud, sim1)
-                print("Similitud coseno: {:.2f} entre la noticia {} con la noticia {} asi tambien entre la noticia {} con la noticia {}".format(sim1, i+1, j+1, j+1, i+1))
+            clear_screen()
             
+            titulos = range(len(palabras_noticias_aux))
+            crear_matriz_similitud_excel(titulos,palabras_noticias_aux)
+            max_similitud = 0.0
 
-        print("\nLa mayor similitud es {:.2f}".format(max_similitud))
-        print("\nSe genero un archivo excel para estudiar mejor los resultados...")
+            for i in range(len(titulos)):
+                for j in range(i+1, len(titulos)):
+                    similitud = compare_news(palabras_noticias_aux[i], palabras_noticias_aux[j])
+                    sim1=similitud
+                    max_similitud = max(max_similitud, sim1)
+                    print("Similitud coseno: {:.2f} entre la noticia {} con la noticia {} asi tambien entre la noticia {} con la noticia {}".format(sim1, i+1, j+1, j+1, i+1))
+                
+
+            print("\nLa mayor similitud es {:.2f}".format(max_similitud))
+            print("\nSe genero un archivo excel para estudiar mejor los resultados...")
+        else:
+            print("Debe seleccionar la opción 2 antes de seleccionar la opción 3") 
         
-
-
-    
-    ###################################################################################################
-        
-    ###################################################################################################
 
 
 
