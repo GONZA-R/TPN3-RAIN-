@@ -156,7 +156,6 @@ def conseguir_url(url):
                     href = link.get('href')
                     if href and 'autor' not in href and 'infobae' not in href:
                         if href and 'economia/2023' in href:
-                            #print(href)
                             urls_noticias.append(href)
             return urls_noticias
 #####################################################################################################
