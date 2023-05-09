@@ -303,9 +303,6 @@ def escribir_frecuencias_en_txt(frecuencias, nombre_archivo):
 # Funciones punto 3
 
 #####################################################################################################
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -314,17 +311,6 @@ def compare_news(news1, news2):
     # Convertir las listas tokenizadas a strings
     text1 = " ".join(news1)
     text2 = " ".join(news2)
-
-    # Lemmatización de los tokens
-    lemmatizer = WordNetLemmatizer()
-    tokens1 = word_tokenize(text1)
-    tokens2 = word_tokenize(text2)
-    tokens1 = [lemmatizer.lemmatize(word) for word in tokens1]
-    tokens2 = [lemmatizer.lemmatize(word) for word in tokens2]
-
-    # Verificar que las listas de tokens no estén vacías
-    if not tokens1 or not tokens2:
-        return 0.0
 
     # Vectorización de los textos utilizando la medida TF-IDF
     vectorizer = TfidfVectorizer()
@@ -389,7 +375,6 @@ def crear_matriz_similitud_excel(titulos,palabras_noticias):
 
 # Finaliza funciones punto 3
 #####################################################################################################
-
 
 
 # Main
@@ -537,7 +522,6 @@ while True:
             palabras_noticias_stemming=algoritmo_snowball(palabras_noticias_stemming)
             palabras_noticias_stemming=obtener_frecuencias(palabras_noticias_stemming)
 
-            
             lista_palabras_noticias.append(palabras_noticias)
             lista_palabras_stemming.append(palabras_noticias_stemming)
 
@@ -596,12 +580,8 @@ while True:
             print("Debe seleccionar la opción 2 antes de seleccionar la opción 3") 
         
 
-
-
 ####################################################################################3
         
-
-
         input("Presione enter para continuar...")
 
         pass
